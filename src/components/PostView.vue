@@ -3,10 +3,14 @@
     <div class="mdl-grid">
       <div class="mdl-cell mdl-cell--8-col">
         <div class="card-image__picture">
-          <img :src="this.catUrl"/>
+          <img :src="this.photo"/>
         </div>
       </div>
       <div class="mdl-cell mdl-cell--4-col mdl-cell--8-col-tablet">
+        <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label is-upgraded is-dirty">
+          <input id="photo" @change="onFileChange" type="file" accept="image/*" class="mdl-textfield__input" placeholder=""/>
+          <label for="photo" class="mdl-textfield__label">Photo</label>
+        </div>
         <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label is-upgraded is-dirty">
           <input id="username" v-model="title" type="text" class="mdl-textfield__input"/>
           <label for="username" class="mdl-textfield__label">Describe me</label>
@@ -22,29 +26,35 @@
 </template>
 
 <script>
-import parse from 'xml-parser'
-
 export default {
   data () {
     return {
-      'catUrl': '',
-      'title': ''
+      'title': '',
+      'photo': ''
     }
-  },
-  mounted () {
-    this.$http.get('http://thecatapi.com/api/images/get?format=xml&results_per_page=1').then(response => {
-      this.catUrl = parse(response.body).root.children['0'].children['0'].children['0'].children['0'].content
-    })
   },
   methods: {
     postCat () {
       this.$root.$firebaseRefs.cat.push({
-        'url': this.catUrl,
+        'url': this.photo,
         'comment': this.title,
         'info': 'Posted by Charles on Tuesday',
         'created_at': -1 * new Date().getTime()
       })
       .then(this.$router.push('/'))
+    },
+    onFileChange (event) {
+      let files = event.target.files || event.dataTransfer.files
+
+      this.createImage(files[0])
+    },
+    createImage (file) {
+      let reader = new FileReader()
+
+      reader.onload = (e) => {
+        this.photo = e.target.result
+      }
+      reader.readAsDataURL(file)
     }
   }
 }
